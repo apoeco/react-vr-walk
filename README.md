@@ -15,7 +15,8 @@ import Walk from 'react-vr-walk'
 class App extends React.Component {
   render() {
     return(
-      <Walk panoSource={asset('chess-world.jpg')}>
+      <Walk panoSource={asset('chess-world.jpg')}
+            speed={1}>
         <View style={{flex: 1, flexDirection: 'row'}}>
           <Text>Hey!</Text>
         </View>
