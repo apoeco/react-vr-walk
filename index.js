@@ -2,7 +2,8 @@ import React, { Component } from 'react';
 import {
   Scene,
   Animated,
-  Pano
+  Pano,
+	VrHeadModel
 } from 'react-vr';
 import PropTypes from 'prop-types';
 
@@ -60,6 +61,7 @@ export default class Walk extends Component {
     this.positionZ = starting;
     this.positionPZ = startingPano;
     this.positionX = 0;
+		this.angle = VrHeadModel.rotation()[1]
   }
 
   onInput = (e) => {
@@ -87,32 +89,124 @@ export default class Walk extends Component {
   }
 
   walk = (position) => {
-    const { speed = 0.1 } = this.props;
-
+    const { speed = 1 } = this.props;
+		this.angle = Math.abs(90 - Math.abs(VrHeadModel.rotation()[1])) // get complimentary angle
+		console.log('angle...', this.angle)
+		console.log('BEFORE move [x,z,pz]...', [this.positionX, this.positionZ, this.positionPZ])
     switch (position) {
       case DIRECTION.FORWARD:
-        this.positionZ = this.positionZ - speed;
-        this.positionPZ = this.positionPZ + (speed * 10);
-        this.moveZ(null, { dz: this.positionZ });
-        this.movePZ(null, { dz: this.positionPZ });
+				if(Math.abs(VrHeadModel.rotation()[1]) < 90) {
+					//z is q1 or q2, move in forward direction, negative.
+					this.positionZ = this.positionZ - (speed * Math.sin(this.angle * Math.PI / 180));
+					this.positionPZ = this.positionZ
+					this.moveZ(null, { dz: this.positionZ });
+					this.movePZ(null, { dz: this.positionPZ });
+				}
+				else if(Math.abs(VrHeadModel.rotation()[1]) > 90) { //if positive
+					//z is q3 or q4, move in reverse direction, positive.
+					this.positionZ = this.positionZ + (speed * Math.sin(this.angle * Math.PI / 180));
+					this.positionPZ = this.positionZ
+					this.moveZ(null, { dz: this.positionZ });
+					this.movePZ(null, { dz: this.positionPZ });
+				}
+
+				if(VrHeadModel.rotation()[1] > 0) {
+					this.positionX = this.positionX - (speed * Math.cos(Math.abs(this.angle) * Math.PI / 180));
+					this.moveX(null, { dx: this.positionX });
+				}
+				else if(VrHeadModel.rotation()[1] < 0) {
+					this.positionX = this.positionX + (speed * Math.cos(Math.abs(this.angle) * Math.PI / 180));
+					this.moveX(null, { dx: this.positionX });
+				}
         break;
       case DIRECTION.RIGHT:
-        this.positionX = this.positionX + speed;
-        this.moveX(null, { dx: this.positionX });
+				console.log(VrHeadModel.rotation()[1] - 90)
+				let rightAngle = Math.abs(90 - Math.abs(VrHeadModel.rotation()[1] - 90)) || 0//subtract 90 to pivot the headset right.
+				//the rest is same as fwd
+				if(Math.abs(VrHeadModel.rotation()[1] - 90) < 90) {
+					//z is q1 or q2, move in forward direction, negative.
+					this.positionZ = this.positionZ - (speed * Math.sin(rightAngle * Math.PI / 180));
+					this.positionPZ = this.positionZ
+					this.moveZ(null, { dz: this.positionZ });
+					this.movePZ(null, { dz: this.positionPZ });
+				}
+				else if(Math.abs(VrHeadModel.rotation()[1] - 90) > 90) { //if positive
+					//z is q1 or q2, move in reverse direction, positive.
+					this.positionZ = this.positionZ + (speed * Math.sin(rightAngle * Math.PI / 180));
+					this.positionPZ = this.positionZ
+					this.moveZ(null, { dz: this.positionZ });
+					this.movePZ(null, { dz: this.positionPZ });
+				}
+
+				if(VrHeadModel.rotation()[1] - 90 > 0) {
+					this.positionX = this.positionX - (speed * Math.cos(Math.abs(rightAngle) * Math.PI / 180));
+					this.moveX(null, { dx: this.positionX });
+				}
+				else if(VrHeadModel.rotation()[1] - 90 < 0) {
+					this.positionX = this.positionX + (speed * Math.cos(Math.abs(rightAngle) * Math.PI / 180));
+					this.moveX(null, { dx: this.positionX });
+				}
+
         break;
       case DIRECTION.BACKWARD:
-        this.positionZ = this.positionZ + speed;
-        this.positionPZ = this.positionPZ - (speed * 10);
-        this.moveZ(null, { dz: this.positionZ });
-        this.movePZ(null, { dz: this.positionPZ });
+				if(Math.abs(VrHeadModel.rotation()[1]) < 90) {
+					//z is q3 or q4, move in forward direction, negative.
+					this.positionZ = this.positionZ + (speed * Math.sin(this.angle * Math.PI / 180));
+					this.positionPZ = this.positionZ //(this.positionPZ - (speed * 10)) * Math.sin(this.angle * Math.PI / 180);
+					this.moveZ(null, { dz: this.positionZ });
+					this.movePZ(null, { dz: this.positionPZ });
+				}
+				else if(Math.abs(VrHeadModel.rotation()[1]) > 90) { //if positive
+					//z is q1 or q2, move in reverse direction, negative.
+					this.positionZ = this.positionZ - (speed * Math.sin(this.angle * Math.PI / 180));
+					this.positionPZ = this.positionZ//(this.positionPZ + (speed * 10)) * Math.sin(this.angle * Math.PI / 180);
+					this.moveZ(null, { dz: this.positionZ });
+					this.movePZ(null, { dz: this.positionPZ });
+				}
+
+
+
+				if(VrHeadModel.rotation()[1] > 0) {
+					this.positionX = this.positionX + (speed * Math.cos(Math.abs(this.angle) * Math.PI / 180));
+					this.moveX(null, { dx: this.positionX });
+				}
+
+				else if(VrHeadModel.rotation()[1] < 0) {
+					this.positionX = this.positionX - (speed * Math.cos(Math.abs(this.angle) * Math.PI / 180));
+					this.moveX(null, { dx: this.positionX });
+				}
         break;
       case DIRECTION.LEFT:
-        this.positionX = this.positionX - speed;
-        this.moveX(null, { dx: this.positionX });
-        break;
+				console.log(VrHeadModel.rotation()[1] + 90)
+				let leftAngle = Math.abs(90 - Math.abs(VrHeadModel.rotation()[1] + 90)) || 0//subtract 90 to pivot the headset right.
+				//the rest is same as fwd
+				if(Math.abs(VrHeadModel.rotation()[1] + 90) < 90) {
+					//z is q1 or q2, move in forward direction, negative.
+					this.positionZ = this.positionZ - (speed * Math.sin(leftAngle * Math.PI / 180));
+					this.positionPZ = this.positionZ
+					this.moveZ(null, { dz: this.positionZ });
+					this.movePZ(null, { dz: this.positionPZ });
+				}
+				else if(Math.abs(VrHeadModel.rotation()[1] + 90) > 90) { //if positive
+					//z is q1 or q2, move in reverse direction, positive.
+					this.positionZ = this.positionZ + (speed * Math.sin(leftAngle * Math.PI / 180));
+					this.positionPZ = this.positionZ
+					this.moveZ(null, { dz: this.positionZ });
+					this.movePZ(null, { dz: this.positionPZ });
+				}
+
+				if(VrHeadModel.rotation()[1] + 90 > 0) {
+					this.positionX = this.positionX - (speed * Math.cos(Math.abs(leftAngle) * Math.PI / 180));
+					this.moveX(null, { dx: this.positionX });
+				}
+				else if(VrHeadModel.rotation()[1] + 90 < 0) {
+					this.positionX = this.positionX + (speed * Math.cos(Math.abs(leftAngle) * Math.PI / 180));
+					this.moveX(null, { dx: this.positionX });
+				}
       default:
         break;
     }
+		console.log('AFTER move [x,z,pz]...', [this.positionX, this.positionZ, this.positionPZ])
   }
 
   render() {
